@@ -124,7 +124,7 @@ void update_value(
 
 // ---------------- Demo ----------------
 int main() {
-    const string filename = "demo.idb";
+    const string filename = "demo.ibd";
 
     // Create pages
     write_page(filename, 0, -1, 1, "ROOT PAGE");

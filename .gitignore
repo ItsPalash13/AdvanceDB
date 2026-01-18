@@ -1,0 +1,4 @@
+# Executable files
+*.exe
+# Database files
+*.ibd
