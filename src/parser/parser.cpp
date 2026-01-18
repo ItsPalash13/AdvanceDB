@@ -8,9 +8,15 @@
 enum class TokenType {
     Identifier,
     Number,
+    String,
 
     Select, From, Where, And, Or,
     OrderBy, GroupBy, By,
+    Create, Database, Table, In,
+    Primary, Key, Unique, Not, Null,
+    Insert, Into, Values,
+    Update, Set,
+    Delete,
 
     Plus, Minus, Star, Slash,
     Eq, Lt, Gt, LtEq, GtEq,
@@ -43,9 +49,9 @@ public:
         char c = input[pos];
 
         // Identifiers / keywords
-        if (isalpha(c)) {
+        if (isalpha(c) || c == '_') {
             size_t start = pos;
-            while (pos < input.size() && isalnum(input[pos])) pos++;
+            while (pos < input.size() && (isalnum(input[pos]) || input[pos] == '_')) pos++;
             std::string word = input.substr(start, pos - start);
 
             if (word == "SELECT") return {TokenType::Select, word};
@@ -56,14 +62,56 @@ public:
             if (word == "ORDER")  return {TokenType::OrderBy, word};
             if (word == "GROUP")  return {TokenType::GroupBy, word};
             if (word == "BY")     return {TokenType::By, word};
+            if (word == "CREATE") return {TokenType::Create, word};
+            if (word == "DATABASE") return {TokenType::Database, word};
+            if (word == "TABLE")  return {TokenType::Table, word};
+            if (word == "IN")     return {TokenType::In, word};
+            if (word == "PRIMARY") return {TokenType::Primary, word};
+            if (word == "KEY")    return {TokenType::Key, word};
+            if (word == "UNIQUE") return {TokenType::Unique, word};
+            if (word == "NOT")    return {TokenType::Not, word};
+            if (word == "NULL")   return {TokenType::Null, word};
+            if (word == "INSERT") return {TokenType::Insert, word};
+            if (word == "INTO")   return {TokenType::Into, word};
+            if (word == "VALUES") return {TokenType::Values, word};
+            if (word == "UPDATE") return {TokenType::Update, word};
+            if (word == "SET")    return {TokenType::Set, word};
+            if (word == "DELETE") return {TokenType::Delete, word};
 
             return {TokenType::Identifier, word};
         }
 
-        // Numbers
+        // String literals (single quotes)
+        if (c == '\'') {
+            pos++; // Skip opening quote
+            size_t start = pos;
+            while (pos < input.size() && input[pos] != '\'') {
+                // Handle escaped quotes
+                if (input[pos] == '\\' && pos + 1 < input.size()) {
+                    pos += 2;
+                } else {
+                    pos++;
+                }
+            }
+            if (pos >= input.size()) {
+                throw std::runtime_error("Unterminated string literal");
+            }
+            std::string str = input.substr(start, pos - start);
+            pos++; // Skip closing quote
+            return {TokenType::String, str};
+        }
+
+        // Numbers (integers and floats)
         if (isdigit(c)) {
             size_t start = pos;
             while (pos < input.size() && isdigit(input[pos])) pos++;
+            
+            // Check for decimal point (floating point number)
+            if (pos < input.size() && input[pos] == '.') {
+                pos++; // Skip decimal point
+                while (pos < input.size() && isdigit(input[pos])) pos++;
+            }
+            
             return {TokenType::Number, input.substr(start, pos - start)};
         }
 
@@ -97,7 +145,7 @@ public:
 };
 
 // 2️⃣ AST (chains of structs, like we discussed)
-enum class ExprKind { Identifier, Number, Unary, Binary };
+enum class ExprKind { Identifier, Number, String, Unary, Binary };
 
 struct Expr {
     ExprKind kind;
@@ -114,6 +162,13 @@ struct NumberExpr : Expr {
     int value;
     NumberExpr(int v) : value(v) {
         kind = ExprKind::Number;
+    }
+};
+
+struct StringExpr : Expr {
+    std::string value;
+    StringExpr(const std::string& v) : value(v) {
+        kind = ExprKind::String;
     }
 };
 
@@ -190,6 +245,12 @@ public:
             return new NumberExpr(val);
         }
 
+        if (current.type == TokenType::String) {
+            std::string val = current.text;
+            eat(TokenType::String);
+            return new StringExpr(val);
+        }
+
         if (current.type == TokenType::LParen) {
             eat(TokenType::LParen);
             Expr* e = parse_expr();
@@ -202,13 +263,29 @@ public:
 
 };
 
-#include "statements.h"
+#include "statements/statement.h"
 
 // Main parse_statement function - returns Statement abstraction
 Statement parse_statement(Parser& parser) {
     if (parser.current.type == TokenType::Select) {
         SelectStmt select_stmt = parse_select(parser);
         return Statement(select_stmt);
+    }
+    if (parser.current.type == TokenType::Create) {
+        CreateStmt create_stmt = parse_create(parser);
+        return Statement(create_stmt);
+    }
+    if (parser.current.type == TokenType::Insert) {
+        InsertStmt insert_stmt = parse_insert(parser);
+        return Statement(insert_stmt);
+    }
+    if (parser.current.type == TokenType::Update) {
+        UpdateStmt update_stmt = parse_update(parser);
+        return Statement(update_stmt);
+    }
+    if (parser.current.type == TokenType::Delete) {
+        DeleteStmt delete_stmt = parse_delete(parser);
+        return Statement(delete_stmt);
     }
     throw std::runtime_error("Unsupported statement type");
 }
