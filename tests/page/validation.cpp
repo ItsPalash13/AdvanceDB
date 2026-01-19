@@ -6,7 +6,7 @@
 void validate_page() {
     Page* page = (Page*)malloc(sizeof(Page));
 
-    init_page(*page, 1, (PageType)1, (PageLevel)1);
+    init_page(*page, 1, PageType::DATA, PageLevel::INTERNAL);
 
     std::string storage_path = "G://advancedb//AdvanceDB//database.db";
     DiskManager D = DiskManager(storage_path);
