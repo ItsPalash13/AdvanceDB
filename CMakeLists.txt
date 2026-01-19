@@ -21,8 +21,13 @@ set(STORAGE_SOURCES
 # add_library(storage STATIC ${STORAGE_SOURCES})
 
 # Test: Page validation
-add_executable(test_validation 
+add_executable(slot_validation 
     tests/page/validation.cpp
+    ${STORAGE_SOURCES}
+)
+
+add_executable(test_validation 
+    tests/page/slot_validation.cpp
     ${STORAGE_SOURCES}
 )
 

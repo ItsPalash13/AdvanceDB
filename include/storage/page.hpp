@@ -48,4 +48,5 @@ void init_page(Page& page, uint32_t page_id, PageType page_type, PageLevel page_
 
 // slot functionalities
 uint16_t* slot_ptr(Page& page, uint16_t index);
-
+void insert_slot(Page& page, uint16_t index, uint16_t record_offset);
+void remove_slot(Page& page, uint16_t index);
