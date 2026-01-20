@@ -15,19 +15,25 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 set(STORAGE_SOURCES
     src/storage/disk_manager.cpp
     src/storage/page.cpp
+    src/storage/record.cpp
 )
 
 # Create storage library (optional, for better organization)
 # add_library(storage STATIC ${STORAGE_SOURCES})
 
 # Test: Page validation
-add_executable(slot_validation 
-    tests/page/validation.cpp
-    ${STORAGE_SOURCES}
-)
+# add_executable(slot_validation 
+#     tests/page/validation.cpp
+#     ${STORAGE_SOURCES}
+# )
 
-add_executable(test_validation 
-    tests/page/slot_validation.cpp
+# add_executable(test_validation 
+#     tests/page/slot_validation.cpp
+#     ${STORAGE_SOURCES}
+# )
+
+add_executable(test_validation
+    tests/page/page_insert.cpp
     ${STORAGE_SOURCES}
 )
 
@@ -43,11 +49,22 @@ set_target_properties(test_validation PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
 )
 
+# set_target_properties(test_page_insert PROPERTIES
+#     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+# )
+
 # Optional: Create a custom target to run tests
 add_custom_target(run_validation
     COMMAND test_validation
     DEPENDS test_validation
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin
     COMMENT "Running validation test"
+)
+
+add_custom_target(run_page_insert
+    COMMAND test_page_insert
+    DEPENDS test_page_insert
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    COMMENT "Running page_insert test"
 )
 

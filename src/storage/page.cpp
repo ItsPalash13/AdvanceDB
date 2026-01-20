@@ -45,15 +45,16 @@ void insert_slot(Page& page, uint16_t index, uint16_t record_offset) {
     uint16_t new_free_end = header->free_end;
 
     // shift slots before insertion index to new positions
-    for(int i = 0; i < static_cast<int>(index); ++i) {
+    for (uint16_t i = 0; i < index; ++i) {
         *reinterpret_cast<uint16_t*>(page.data + new_free_end + i * sizeof(uint16_t)) =
             *reinterpret_cast<uint16_t*>(page.data + old_free_end + i * sizeof(uint16_t));
     }
     
     // shift slots after insertion index to make room
-    for(int i = current_count - 1; i >= static_cast<int>(index); --i) {
-        *reinterpret_cast<uint16_t*>(page.data + new_free_end + (i + 1) * sizeof(uint16_t)) =
-            *reinterpret_cast<uint16_t*>(page.data + old_free_end + i * sizeof(uint16_t));
+    // iterate backwards safely without unsigned underflow
+    for (uint16_t i = current_count; i > index; --i) {
+        *reinterpret_cast<uint16_t*>(page.data + new_free_end + i * sizeof(uint16_t)) =
+            *reinterpret_cast<uint16_t*>(page.data + old_free_end + (i - 1) * sizeof(uint16_t));
     }
     
     // write new slot
@@ -76,13 +77,13 @@ void remove_slot(Page& page, uint16_t index) {
     uint16_t new_free_end = header->free_end;
 
     // shift slots before removed index to new positions
-    for(int i = 0; i < static_cast<int>(index); ++i) {
+    for(uint16_t i = 0; i < static_cast<int>(index); ++i) {
         *reinterpret_cast<uint16_t*>(page.data + new_free_end + i * sizeof(uint16_t)) =
             *reinterpret_cast<uint16_t*>(page.data + old_free_end + i * sizeof(uint16_t));
     }
     
     // shift slots after removed index to fill gap
-    for(int i = index + 1; i < current_count; ++i) {
+    for(uint16_t i = index + 1; i < current_count; ++i) {
         *reinterpret_cast<uint16_t*>(page.data + new_free_end + (i - 1) * sizeof(uint16_t)) =
             *reinterpret_cast<uint16_t*>(page.data + old_free_end + i * sizeof(uint16_t));
     }
