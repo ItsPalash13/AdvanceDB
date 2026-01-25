@@ -1,0 +1,2 @@
+g++ -std=c++17 -I../.. main.cpp executor.cpp executor_factory.cpp executors.cpp evaluator.cpp storage.cpp expr_defs.cpp -o main.exe
+.\main.exe
