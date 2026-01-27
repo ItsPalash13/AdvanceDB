@@ -16,6 +16,8 @@ set(STORAGE_SOURCES
     src/storage/disk_manager.cpp
     src/storage/page.cpp
     src/storage/record.cpp
+    src/storage/table.cpp
+    src/storage/slot_helpers.cpp
 )
 
 # Create storage library (optional, for better organization)
@@ -37,6 +39,11 @@ add_executable(test_validation
     ${STORAGE_SOURCES}
 )
 
+add_executable(test_page_allocation
+    tests/page/page_allocation.cpp
+    ${STORAGE_SOURCES}
+)
+
 # Optional: Parser executable
 # add_executable(parser
 #     src/parser/main.cpp
@@ -48,6 +55,14 @@ add_executable(test_validation
 set_target_properties(test_validation PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
 )
+
+set_target_properties(test_page_allocation PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+)
+
+if (WIN32)
+    target_link_options(test_page_allocation PRIVATE -mconsole)
+endif()
 
 # set_target_properties(test_page_insert PROPERTIES
 #     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
@@ -66,5 +81,12 @@ add_custom_target(run_page_insert
     DEPENDS test_page_insert
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin
     COMMENT "Running page_insert test"
+)
+
+add_custom_target(run_page_allocation
+    COMMAND test_page_allocation
+    DEPENDS test_page_allocation
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    COMMENT "Running page_allocation test"
 )
 

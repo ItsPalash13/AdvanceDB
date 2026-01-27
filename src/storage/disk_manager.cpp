@@ -6,14 +6,29 @@
 #include <iostream>
 #include <cstring>
 
-DiskManager::DiskManager(std::string& file_path) {
+DiskManager::DiskManager(const std::string& file_path) {
     // 0644 is the permission setting for the created file
-    // each number represents user, group, others respectively
+    // each number represents user, group, others 
     file_descriptor = open(file_path.c_str(), O_RDWR | O_CREAT, 0644);
 
     if (file_descriptor < 0) {
         throw std::runtime_error("Failed to open or create file");
     }
+}
+
+DiskManager::DiskManager(DiskManager&& other) noexcept {
+    file_descriptor = other.file_descriptor;
+    other.file_descriptor = -1;
+}
+
+DiskManager& DiskManager::operator=(DiskManager&& other) noexcept {
+    if (this == &other) return *this;
+    if (file_descriptor >= 0) {
+        close(file_descriptor);
+    }
+    file_descriptor = other.file_descriptor;
+    other.file_descriptor = -1;
+    return *this;
 }
 
 DiskManager::~DiskManager() {

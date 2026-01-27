@@ -10,8 +10,9 @@ enum class PageType : uint16_t {
 };
 
 enum class PageLevel : uint16_t {
-    LEAF = 0,
-    INTERNAL = 1
+    NONE = 0,
+    LEAF = 1,
+    INTERNAL = 2
 };
 
 // ensuring single byte of alignment for each field in the struct
@@ -22,7 +23,8 @@ struct PageHeader {
     PageLevel page_level;
 
     // might need to take a look at struct again
-    uint8_t reserved[8];
+    uint32_t root_page;
+    uint8_t reserved[4];
     uint16_t flags;
     uint16_t cell_count; 
     uint16_t free_start;
@@ -50,3 +52,8 @@ void init_page(Page& page, uint32_t page_id, PageType page_type, PageLevel page_
 uint16_t* slot_ptr(Page& page, uint16_t index);
 void insert_slot(Page& page, uint16_t index, uint16_t record_offset);
 void remove_slot(Page& page, uint16_t index);
+
+// inline definition to avoid ODR/link warnings
+inline PageHeader* get_header(Page& page) {
+    return reinterpret_cast<PageHeader*>(page.data);
+}

@@ -3,6 +3,24 @@
 #include <cstring>
 #include <algorithm>
 
+
+
+// helpers 
+bool can_insert(Page& page, uint16_t record_size) {
+    PageHeader* page_header = get_header(page);
+    return page_header->free_start + record_size + sizeof(uint16_t) <= page_header->free_end;
+}
+
+int compare_keys(const uint8_t* first, uint16_t first_size, const uint8_t* second, uint16_t second_size) {
+    int min = std::min(first_size, second_size);
+    int res = std::memcmp(first, second, min);
+
+    if (res != 0) return res;
+
+    return static_cast<int>(first_size) - static_cast<int>(second_size);
+}
+
+
 uint16_t write_record(Page& page, const uint8_t* key, uint16_t key_len, const uint8_t* value, uint16_t value_len) {
     PageHeader* page_header = get_header(page);
 
@@ -25,30 +43,6 @@ uint16_t write_record(Page& page, const uint8_t* key, uint16_t key_len, const ui
     return offset; // offset to new data
 }
 
-const uint8_t* slot_key(Page& page, uint16_t slot_index, uint16_t& key_len) {
-    uint16_t record_offset = *slot_ptr(page, slot_index);
-    RecordHeader* record_header = reinterpret_cast<RecordHeader*>(page.data + record_offset);
-
-    key_len = record_header->key_size;
-    return page.data + record_offset + sizeof(RecordHeader);
-}
-
-const uint8_t* slot_value(Page& page, uint16_t slot_index, uint16_t& value_len) {
-    uint16_t record_offset = *slot_ptr(page, slot_index);
-    RecordHeader* record_header = reinterpret_cast<RecordHeader*>(page.data + record_offset);
-
-    value_len = record_header->value_size;
-    return page.data + record_offset + sizeof(RecordHeader) + record_header->key_size;
-}
-
-int compare_keys(const uint8_t* first, uint16_t first_size, const uint8_t* second, uint16_t second_size) {
-    int min = std::min(first_size, second_size);
-    int res = std::memcmp(first, second, min);
-
-    if (res != 0) return res;
-
-    return static_cast<int>(first_size) - static_cast<int>(second_size);
-}
 
 BSearchResult search_record(Page& page, const uint8_t* key, uint16_t key_len) {
     PageHeader* header = get_header(page);
@@ -75,10 +69,6 @@ BSearchResult search_record(Page& page, const uint8_t* key, uint16_t key_len) {
     return {false, left};
 }
 
-bool can_insert(Page& page, uint16_t record_size) {
-    PageHeader* page_header = get_header(page);
-    return page_header->free_start + record_size + sizeof(uint16_t) <= page_header->free_end;
-}
 
 bool page_insert(Page& page, const uint8_t* key, uint16_t key_size, const uint8_t* value, uint16_t value_size) {
 
@@ -97,5 +87,20 @@ bool page_insert(Page& page, const uint8_t* key, uint16_t key_size, const uint8_
     uint16_t roffset = write_record(page, key, key_size, value, value_size);
 
     insert_slot(page, result.index, roffset);
+    return true;
+}
+
+bool page_delete(Page& page, const uint8_t* key, uint16_t key_len) {
+    
+    BSearchResult sr = search_record(page, key, key_len);
+    if (!sr.found) return false;
+    
+    uint32_t record_offset = *slot_ptr(page, sr.index);
+
+    RecordHeader* rh = reinterpret_cast<RecordHeader*>(page.data + record_offset);
+
+    rh->flags |= RECORD_DELETED;
+
+    remove_slot(page, sr.index);
     return true;
 }
