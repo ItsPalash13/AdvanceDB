@@ -1,3 +1,4 @@
+#pragma once
 #include <string>
 #include "storage/disk_manager.hpp"
 #include <cstdint>

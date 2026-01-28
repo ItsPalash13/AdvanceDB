@@ -1,3 +1,4 @@
+#pragma once
 #include <cstdint>
 
 inline constexpr uint32_t PAGE_SIZE = 8192;

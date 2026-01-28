@@ -20,6 +20,14 @@ set(STORAGE_SOURCES
     src/storage/slot_helpers.cpp
 )
 
+# B+ Tree sources
+set(BTREE_SOURCES
+    src/storage/btree/btree.cpp
+    src/storage/btree/leaf.cpp
+    src/storage/btree/internal.cpp
+    src/storage/btree/helpers.cpp
+)
+
 # Create storage library (optional, for better organization)
 # add_library(storage STATIC ${STORAGE_SOURCES})
 
@@ -44,6 +52,12 @@ add_executable(test_page_allocation
     ${STORAGE_SOURCES}
 )
 
+add_executable(test_btree
+    tests/storage/btree_test/btree_test.cpp
+    ${STORAGE_SOURCES}
+    ${BTREE_SOURCES}
+)
+
 # Optional: Parser executable
 # add_executable(parser
 #     src/parser/main.cpp
@@ -60,8 +74,13 @@ set_target_properties(test_page_allocation PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
 )
 
+set_target_properties(test_btree PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+)
+
 if (WIN32)
     target_link_options(test_page_allocation PRIVATE -mconsole)
+    target_link_options(test_btree PRIVATE -mconsole)
 endif()
 
 # set_target_properties(test_page_insert PROPERTIES
@@ -90,3 +109,9 @@ add_custom_target(run_page_allocation
     COMMENT "Running page_allocation test"
 )
 
+add_custom_target(run_btree_test
+    COMMAND test_btree
+    DEPENDS test_btree
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    COMMENT "Running B+ tree test"
+)
